@@ -27,6 +27,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 
 # Installed Apps
 INSTALLED_APPS = [
+    'goldendaysapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -101,7 +102,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
-USE_TZ = True
+USE_TZ = False
 
 # Static
 STATIC_URL = 'static/'
@@ -135,3 +136,6 @@ SIMPLE_JWT = {
 
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+AUTH_USER_MODEL = 'goldendaysapp.AllLog'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
