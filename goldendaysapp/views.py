@@ -23,14 +23,13 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import StudentRegSerializer
 
-from .models import AllLog, StudentReg
+from .models import AllLog
 class LoginAPIView(APIView):
     def post(self, request):
 
         email_or_phone = request.data.get("email_or_phone")
-        username = request.data.get("username")   # 👈 changed
+        username = request.data.get("username")  
         password = request.data.get("password")
         role = request.data.get("role")
 
@@ -138,3 +137,52 @@ class RefreshTokenAPIView(APIView):
                 {"error": "Invalid or expired refresh token"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+class ResetPasswordAPIView(APIView):
+    def post(self, request):
+
+        unique_id = request.data.get("unique_id")
+        role = request.data.get("role")
+        new_password = request.data.get("new_password")
+
+        if not unique_id or not role or not new_password:
+            return Response(
+                {"error": "unique_id, role and new_password are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = AllLog.objects.get(unique_id=unique_id, role=role)
+
+            # ✅ optional safety check
+            if not user.is_active:
+                return Response(
+                    {"error": "Account is disabled"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # ✅ update password
+            user.password = make_password(new_password)
+            user.save()
+
+            return Response(
+                {"message": "Password reset successful"},
+                status=status.HTTP_200_OK
+            )
+
+        except AllLog.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+class UserListAPIView(APIView):
+    def get(self, request):
+        users = AllLog.objects.all().values("username","unique_id","role")
+
+        return Response(
+            {
+                "count": len(users),
+                "data": list(users)
+            },
+            status=status.HTTP_200_OK
+        )
