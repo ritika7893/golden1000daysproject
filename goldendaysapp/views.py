@@ -24,12 +24,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
 
+
 from .models import AllLog
 class LoginAPIView(APIView):
     def post(self, request):
 
         email_or_phone = request.data.get("email_or_phone")
-        username = request.data.get("username")  
+        username = request.data.get("username")   # ðŸ‘ˆ changed
         password = request.data.get("password")
         role = request.data.get("role")
 
@@ -78,7 +79,14 @@ class LoginAPIView(APIView):
                     {"error": "Account is disabled"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-
+            if check_password("Test@1234", user.password):
+                return Response(
+                    {
+                        "error": "Default password not allowed. Please reset your password.",
+                        "action": "FORGOT_PASSWORD_REQUIRED"
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
             # ----------------------------
             # CHECK PASSWORD
             # ----------------------------
@@ -137,21 +145,22 @@ class RefreshTokenAPIView(APIView):
                 {"error": "Invalid or expired refresh token"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+            
 class ResetPasswordAPIView(APIView):
     def post(self, request):
 
-        unique_id = request.data.get("unique_id")
+        username = request.data.get("username")   # 👈 changed
         role = request.data.get("role")
         new_password = request.data.get("new_password")
 
-        if not unique_id or not role or not new_password:
+        if not username or not role or not new_password:
             return Response(
-                {"error": "unique_id, role and new_password are required"},
+                {"error": "username, role and new_password are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            user = AllLog.objects.get(unique_id=unique_id, role=role)
+            user = AllLog.objects.get(username=username, role=role)  # 👈 changed
 
             # ✅ optional safety check
             if not user.is_active:

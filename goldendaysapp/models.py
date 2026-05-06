@@ -2,6 +2,9 @@ from django.db import models
 
 # Create your models here.
 from django.db import models
+
+# Create your models here.
+from django.db import models
 import random
 from datetime import datetime
 from django.utils import timezone
@@ -20,7 +23,7 @@ class AllLog(models.Model):
     unique_id = models.CharField(unique=True, max_length=50, editable=False)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=15,blank=True, null=True)
-    username = models.CharField(max_length=12, unique=True, null=True, blank=True)
+    username = models.CharField(max_length=120, unique=True, null=True, blank=True)
     password = models.CharField(max_length=255,default='')
     role = models.CharField(max_length=50)
     is_verified = models.BooleanField(default=False)

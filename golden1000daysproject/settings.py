@@ -42,6 +42,8 @@ INSTALLED_APPS = [
 ]
 
 # Middleware
+
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',   # Must be on top
     'django.middleware.security.SecurityMiddleware',
@@ -116,7 +118,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # OR specific frontend URL
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:5173", "http://localhost:5174"
  ]
 
 # ==========================
@@ -127,10 +129,12 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-
+#days=7
+#  "ACCESS_TOKEN_LIFETIME": timedelta(minutes=2),
+ #   "REFRESH_TOKEN_LIFETIME": timedelta(minutes=3),
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),   # ✅ 30 seconds
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=1),  
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 
