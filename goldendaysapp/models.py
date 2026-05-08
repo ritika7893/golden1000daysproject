@@ -1,5 +1,5 @@
 from django.db import models
-
+from uuid import uuid4
 # Create your models here.
 from django.db import models
 
@@ -43,3 +43,36 @@ class AllLog(models.Model):
     @property
     def is_anonymous(self):
         return False
+        
+class Candidate(models.Model):
+    candidate_id = models.CharField(max_length=50, unique=True, editable=False)
+    candidate_name = models.CharField(max_length=200)
+    phone= models.CharField(max_length=15)
+    dob = models.DateField()
+    registered_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.CASCADE, related_name='registered_candidates')
+    aadhar_number = models.CharField(max_length=20, unique=True)
+    aadhar_file = models.FileField(upload_to='aadhar_files/', blank=True, null=True)
+    pregancy_num= models.IntegerField()
+    child_name = models.CharField(max_length=200, blank=True, null=True)
+    lmp_date = models.DateField(blank=True, null=True)
+    pan_no = models.CharField(max_length=20, unique=True)
+    pan_file = models.FileField(upload_to='pan_files/', blank=True, null=True)
+    account_number = models.CharField(max_length=30, unique=True)
+    ifsc_code = models.CharField(max_length=20)
+    verified_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.SET_NULL, related_name='verified_candidates', blank=True, null=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    dob_child = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+
+        if not self.candidate_id:
+
+            self.candidate_id = (
+                f"CAND-{uuid4().hex[:8].upper()}"
+            )
+
+        super().save(*args, **kwargs)

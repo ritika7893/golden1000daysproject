@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from uuid import uuid4
 # Create your views here.
 from django.contrib.auth.hashers import check_password, make_password
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -23,9 +23,11 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.permissions import IsAuthenticated
 
+from goldendaysapp.permissions import IsAnganwadi
+from goldendaysapp.serializers import CandidateSerializer
 
 
-from .models import AllLog
+from .models import AllLog,Candidate
 class LoginAPIView(APIView):
     def post(self, request):
 
@@ -192,6 +194,271 @@ class UserListAPIView(APIView):
             {
                 "count": len(users),
                 "data": list(users)
+            },
+            status=status.HTTP_200_OK
+        )
+        
+
+
+class CandidateAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAnganwadi()]  # no permissions for GET
+        return [IsAuthenticated()] 
+    # =========================
+    # GET
+    # =========================
+
+    def get(self, request):
+
+        candidate_id = request.query_params.get("candidate_id")
+
+        if candidate_id:
+
+            try:
+
+                candidate = Candidate.objects.get(
+                    candidate_id=candidate_id
+                )
+
+                serializer = CandidateSerializer(candidate)
+
+                return Response(
+                    {
+                        "success": True,
+                        "data": serializer.data
+                    }
+                )
+
+            except Candidate.DoesNotExist:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Candidate not found"
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        candidates = Candidate.objects.all().order_by("-created_at")
+
+        serializer = CandidateSerializer(
+            candidates,
+            many=True
+        )
+
+        return Response(
+            {
+                "success": True,
+                "data": serializer.data
+            }
+        )
+
+
+    def post(self, request):
+
+        serializer = CandidateSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+
+            aadhar_number = serializer.validated_data.get(
+                "aadhar_number"
+            )
+
+            pregancy_num = serializer.validated_data.get(
+                "pregancy_num"
+            )
+
+            # Prevent duplicate registration
+            already_exists = Candidate.objects.filter(
+                aadhar_number=aadhar_number,
+                pregancy_num=pregancy_num
+            ).exists()
+
+            if already_exists:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message": (
+                            "Candidate already registered "
+                            "with same Aadhaar and pregnancy number"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user_log = AllLog.objects.filter(
+                unique_id=request.user.unique_id
+            ).first()
+
+            if not user_log:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Authenticated user not found in AllLog"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            candidate = serializer.save(
+                candidate_id=f"CAND-{uuid4().hex[:8].upper()}",
+                registered_by=user_log
+            )
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Candidate created successfully",
+                    "data": CandidateSerializer(candidate).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+    def put(self, request):
+
+        candidate_id = request.data.get("candidate_id")
+
+        if not candidate_id:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "candidate_id is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            candidate = Candidate.objects.get(
+                candidate_id=candidate_id
+            )
+
+        except Candidate.DoesNotExist:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Candidate not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CandidateSerializer(
+            candidate,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+
+            aadhar_number = serializer.validated_data.get(
+                "aadhar_number",
+                candidate.aadhar_number
+            )
+
+            pregancy_num = serializer.validated_data.get(
+                "pregancy_num",
+                candidate.pregancy_num
+            )
+
+            duplicate_exists = Candidate.objects.filter(
+                aadhar_number=aadhar_number,
+                pregancy_num=pregancy_num
+            ).exclude(
+                id=candidate.id
+            ).exists()
+
+            if duplicate_exists:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message": (
+                            "Another candidate already exists "
+                            "with same Aadhaar and pregnancy number"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            updated_candidate = serializer.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Candidate updated successfully",
+                    "data": CandidateSerializer(updated_candidate).data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # =========================
+    # DELETE
+    # =========================
+
+    def delete(self, request):
+
+        candidate_id = request.data.get("candidate_id")
+
+        if not candidate_id:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "candidate_id is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            candidate = Candidate.objects.get(
+                candidate_id=candidate_id
+            )
+
+        except Candidate.DoesNotExist:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Candidate not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        candidate.delete()
+
+        return Response(
+            {
+                "success": True,
+                "message": "Candidate deleted successfully"
             },
             status=status.HTTP_200_OK
         )
