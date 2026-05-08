@@ -130,3 +130,11 @@ class Intervention4(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
+
+class QuestionnaireIntervention(models.Model):
+    intervention = models.CharField(max_length=100)
+    question_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    

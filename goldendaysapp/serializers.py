@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 from rest_framework import serializers
-from .models import Candidate, Intervention1, Intervention2, Intervention3, Intervention4
+from .models import Candidate, Intervention1, Intervention2, Intervention3, Intervention4, QuestionnaireIntervention
 class CandidateSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -97,5 +97,10 @@ class CandidateDetailSerializer(serializers.ModelSerializer):
         model = Candidate
 
         fields = "__all__"
-  
+
+class QuestionnaireInterventionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = QuestionnaireIntervention
+        fields = "__all__"
   
