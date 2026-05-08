@@ -80,8 +80,7 @@ class Candidate(models.Model):
 class Intervention1(models.Model):
     candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL, blank=True, null=True,related_name='interventions1')
     intervention_opportunity = models.CharField(max_length=100)
-    poshan_ahar = models.BooleanField(default=False)
-    poshan_sakhi = models.BooleanField(default=False)
+    ques_answer=models.JSONField(blank=True, null=True)
     is_eligible = models.BooleanField(default=False)
     remarks = models.TextField(blank=True, null=True)
     money_transferred_status = models.BooleanField(default=False)
@@ -94,8 +93,7 @@ class Intervention1(models.Model):
 class Intervention2(models.Model):
     candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL,blank=True, null=True, related_name='interventions2')
     intervention_opportunity = models.CharField(max_length=100)
-    poshan_ahar = models.BooleanField(default=False)
-    poshan_sakhi = models.BooleanField(default=False)
+    ques_answer=models.JSONField(blank=True, null=True)
     is_eligible = models.BooleanField(default=False)
     money_transferred_status = models.BooleanField(default=False)
     remark = models.TextField(blank=True, null=True)
@@ -107,8 +105,7 @@ class Intervention2(models.Model):
 class Intervention3(models.Model):
     candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL,blank=True, null=True, related_name='interventions3')
     intervention_opportunity = models.CharField(max_length=100)
-    poshan_ahar = models.BooleanField(default=False)
-    poshan_sakhi = models.BooleanField(default=False)
+    ques_answer=models.JSONField(blank=True, null=True)
     is_eligible = models.BooleanField(default=False)
     money_transferred_status = models.BooleanField(default=False)
     remark = models.TextField(blank=True, null=True)
@@ -121,8 +118,7 @@ class Intervention4(models.Model):
 
     candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL, blank=True, null=True,related_name='interventions4')
     intervention_opportunity = models.CharField(max_length=100)
-    poshan_ahar = models.BooleanField(default=False)
-    poshan_sakhi = models.BooleanField(default=False)
+    ques_answer=models.JSONField(blank=True, null=True)
     is_eligible = models.BooleanField(default=False)
     remark = models.TextField(blank=True, null=True)
     money_transferred_status = models.BooleanField(default=False)

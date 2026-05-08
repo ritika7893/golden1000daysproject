@@ -23,16 +23,16 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.permissions import IsAuthenticated
 
-from goldendaysapp.permissions import IsAnganwadi
-from goldendaysapp.serializers import CandidateDetailSerializer, CandidateSerializer, Intervention1Serializer
+from goldendaysapp.permissions import IsAnganwadi,IsDirector
+from goldendaysapp.serializers import QuestionnaireInterventionSerializer,Intervention1Serializer,CandidateDetailSerializer, CandidateSerializer
 
 
-from .models import AllLog,Candidate
+from .models import AllLog,Candidate,QuestionnaireIntervention
 class LoginAPIView(APIView):
     def post(self, request):
 
         email_or_phone = request.data.get("email_or_phone")
-        username = request.data.get("username")   # ðŸ‘ˆ changed
+        username = request.data.get("username")   # Ã°Å¸â€˜Ë† changed
         password = request.data.get("password")
         role = request.data.get("role")
 
@@ -151,7 +151,7 @@ class RefreshTokenAPIView(APIView):
 class ResetPasswordAPIView(APIView):
     def post(self, request):
 
-        username = request.data.get("username")   # 👈 changed
+        username = request.data.get("username")   # ðŸ‘ˆ changed
         role = request.data.get("role")
         new_password = request.data.get("new_password")
 
@@ -162,16 +162,16 @@ class ResetPasswordAPIView(APIView):
             )
 
         try:
-            user = AllLog.objects.get(username=username, role=role)  # 👈 changed
+            user = AllLog.objects.get(username=username, role=role)  # ðŸ‘ˆ changed
 
-            # ✅ optional safety check
+            # âœ… optional safety check
             if not user.is_active:
                 return Response(
                     {"error": "Account is disabled"},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            # ✅ update password
+            # âœ… update password
             user.password = make_password(new_password)
             user.save()
 
@@ -520,7 +520,7 @@ class CandidateDetailAPIView(APIView):
             },
             status=status.HTTP_200_OK
         )
-
+        
 class Intervention1CreateAPIView(APIView):
 
     authentication_classes = [JWTAuthentication]
@@ -580,4 +580,209 @@ class Intervention1CreateAPIView(APIView):
                 "errors": serializer.errors
             },
             status=status.HTTP_400_BAD_REQUEST
+        )
+        
+class QuestionnaireInterventionAPIView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method in ["POST", "PUT", "DELETE"]:
+            return [IsDirector()]
+        return [IsAuthenticated()]
+
+    # =========================
+    # GET
+    # =========================
+
+    def get(self, request):
+
+        questionnaire_id = request.query_params.get("id")
+
+        if questionnaire_id:
+
+            try:
+
+                questionnaire = QuestionnaireIntervention.objects.get(
+                    id=questionnaire_id
+                )
+
+                serializer = QuestionnaireInterventionSerializer(
+                    questionnaire
+                )
+
+                return Response(
+                    {
+                        "success": True,
+                        "data": serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+
+            except QuestionnaireIntervention.DoesNotExist:
+
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Questionnaire not found"
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        questionnaires = QuestionnaireIntervention.objects.all().order_by(
+            "-created_at"
+        )
+
+        serializer = QuestionnaireInterventionSerializer(
+            questionnaires,
+            many=True
+        )
+
+        return Response(
+            {
+                "success": True,
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+
+    # =========================
+    # POST
+    # =========================
+
+    def post(self, request):
+
+        serializer = QuestionnaireInterventionSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+
+            questionnaire = serializer.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Questionnaire created successfully",
+                    "data": QuestionnaireInterventionSerializer(
+                        questionnaire
+                    ).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # =========================
+    # PUT
+    # =========================
+
+    def put(self, request):
+
+        questionnaire_id = request.data.get("id")
+
+        if not questionnaire_id:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "id is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            questionnaire = QuestionnaireIntervention.objects.get(
+                id=questionnaire_id
+            )
+
+        except QuestionnaireIntervention.DoesNotExist:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Questionnaire not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = QuestionnaireInterventionSerializer(
+            questionnaire,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+
+            updated_questionnaire = serializer.save()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Questionnaire updated successfully",
+                    "data": QuestionnaireInterventionSerializer(
+                        updated_questionnaire
+                    ).data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # =========================
+    # DELETE
+    # =========================
+
+    def delete(self, request):
+
+        questionnaire_id = request.data.get("id")
+
+        if not questionnaire_id:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "id is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            questionnaire = QuestionnaireIntervention.objects.get(
+                id=questionnaire_id
+            )
+
+        except QuestionnaireIntervention.DoesNotExist:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Questionnaire not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        questionnaire.delete()
+
+        return Response(
+            {
+                "success": True,
+                "message": "Questionnaire deleted successfully"
+            },
+            status=status.HTTP_200_OK
         )
