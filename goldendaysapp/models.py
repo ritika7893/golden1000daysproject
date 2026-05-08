@@ -49,7 +49,7 @@ class Candidate(models.Model):
     candidate_name = models.CharField(max_length=200)
     phone= models.CharField(max_length=15)
     dob = models.DateField()
-    registered_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.CASCADE, related_name='registered_candidates')
+    registered_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.CASCADE,blank=True, null=True, related_name='registered_candidates')
     aadhar_number = models.CharField(max_length=20, unique=True)
     aadhar_file = models.FileField(upload_to='aadhar_files/', blank=True, null=True)
     pregancy_num= models.IntegerField()
@@ -76,3 +76,57 @@ class Candidate(models.Model):
             )
 
         super().save(*args, **kwargs)
+        
+class Intervention1(models.Model):
+    candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL, blank=True, null=True,related_name='interventions1')
+    intervention_opportunity = models.CharField(max_length=100)
+    poshan_ahar = models.BooleanField(default=False)
+    poshan_sakhi = models.BooleanField(default=False)
+    is_eligible = models.BooleanField(default=False)
+    remarks = models.TextField(blank=True, null=True)
+    money_transferred_status = models.BooleanField(default=False)
+    created_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.SET_NULL, related_name='created_interventions1', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.name
+
+
+class Intervention2(models.Model):
+    candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL,blank=True, null=True, related_name='interventions2')
+    intervention_opportunity = models.CharField(max_length=100)
+    poshan_ahar = models.BooleanField(default=False)
+    poshan_sakhi = models.BooleanField(default=False)
+    is_eligible = models.BooleanField(default=False)
+    money_transferred_status = models.BooleanField(default=False)
+    remark = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.SET_NULL, related_name='created_interventions2', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.name
+    
+class Intervention3(models.Model):
+    candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL,blank=True, null=True, related_name='interventions3')
+    intervention_opportunity = models.CharField(max_length=100)
+    poshan_ahar = models.BooleanField(default=False)
+    poshan_sakhi = models.BooleanField(default=False)
+    is_eligible = models.BooleanField(default=False)
+    money_transferred_status = models.BooleanField(default=False)
+    remark = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.SET_NULL, related_name='created_interventions3', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.name
+    
+class Intervention4(models.Model):
+
+    candidate_id = models.ForeignKey(Candidate,to_field='candidate_id', on_delete=models.SET_NULL, blank=True, null=True,related_name='interventions4')
+    intervention_opportunity = models.CharField(max_length=100)
+    poshan_ahar = models.BooleanField(default=False)
+    poshan_sakhi = models.BooleanField(default=False)
+    is_eligible = models.BooleanField(default=False)
+    remark = models.TextField(blank=True, null=True)
+    money_transferred_status = models.BooleanField(default=False)
+    created_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.SET_NULL, related_name='created_interventions4', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.name

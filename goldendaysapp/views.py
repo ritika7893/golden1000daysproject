@@ -24,7 +24,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
 from goldendaysapp.permissions import IsAnganwadi
-from goldendaysapp.serializers import CandidateSerializer
+from goldendaysapp.serializers import CandidateDetailSerializer, CandidateSerializer
 
 
 from .models import AllLog,Candidate
@@ -459,6 +459,64 @@ class CandidateAPIView(APIView):
             {
                 "success": True,
                 "message": "Candidate deleted successfully"
+            },
+            status=status.HTTP_200_OK
+        )
+    
+class CandidateDetailAPIView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        candidate_id = request.query_params.get("candidate_id")
+
+        registered_by = request.query_params.get("registered_by")
+
+        candidates = Candidate.objects.all()
+
+        if candidate_id:
+
+            candidates = candidates.filter(
+                candidate_id=candidate_id
+            )
+
+        if registered_by:
+
+            candidates = candidates.filter(
+                registered_by=registered_by
+            )
+
+        if not candidates.exists():
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Candidate not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if candidate_id and candidates.count() == 1:
+
+            serializer = CandidateDetailSerializer(
+                candidates.first()
+            )
+
+        else:
+
+            serializer = CandidateDetailSerializer(
+                candidates,
+                many=True
+            )
+
+        return Response(
+            {
+                "success": True,
+                "count": candidates.count(),
+                "data": serializer.data
             },
             status=status.HTTP_200_OK
         )

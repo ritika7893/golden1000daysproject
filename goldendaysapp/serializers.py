@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 from rest_framework import serializers
-from .models import Candidate
+from .models import Candidate, Intervention1, Intervention2, Intervention3, Intervention4
 class CandidateSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -38,4 +38,64 @@ class CandidateSerializer(serializers.ModelSerializer):
 
         return attrs
 
+
+class Intervention1Serializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention1
+        fields = "__all__"
+
+
+class Intervention2Serializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention2
+        fields = "__all__"
+
+
+class Intervention3Serializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention3
+        fields = "__all__"
+
+
+class Intervention4Serializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Intervention4
+        fields = "__all__"
+
+
+# =========================
+# CANDIDATE DETAIL SERIALIZER
+# =========================
+
+class CandidateDetailSerializer(serializers.ModelSerializer):
+
+    intervention1 = Intervention1Serializer(
+        many=True,
+        read_only=True
+    )
+
+    intervention2 = Intervention2Serializer(
+        many=True,
+        read_only=True
+    )
+
+    intervention3 = Intervention3Serializer(
+        many=True,
+        read_only=True
+    )
+
+    intervention4 = Intervention4Serializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = Candidate
+
+        fields = "__all__"
+  
   
