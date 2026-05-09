@@ -131,12 +131,83 @@ class Intervention3Serializer(serializers.ModelSerializer):
         model = Intervention3
         fields = "__all__"
 
+    def to_representation(self, instance):
+
+        data = super().to_representation(instance)
+
+        if not instance.ques_answer:
+            data["ques_answer"] = []
+            return data
+
+        updated_answers = []
+
+        for item in instance.ques_answer:
+
+            # item = [1, true]
+
+            question_id = item[0]
+            answer = item[1]
+
+            question_text = ""
+
+            question = QuestionnaireIntervention.objects.filter(
+                id=question_id
+            ).first()
+
+            if question:
+                question_text = question.question_text
+
+            updated_answers.append([
+                question_id,
+                question_text,
+                answer
+            ])
+
+        data["ques_answer"] = updated_answers
+
+        return data
 
 class Intervention4Serializer(serializers.ModelSerializer):
 
     class Meta:
         model = Intervention4
         fields = "__all__"
+
+    def to_representation(self, instance):
+
+        data = super().to_representation(instance)
+
+        if not instance.ques_answer:
+            data["ques_answer"] = []
+            return data
+
+        updated_answers = []
+
+        for item in instance.ques_answer:
+
+            # item = [1, true]
+
+            question_id = item[0]
+            answer = item[1]
+
+            question_text = ""
+
+            question = QuestionnaireIntervention.objects.filter(
+                id=question_id
+            ).first()
+
+            if question:
+                question_text = question.question_text
+
+            updated_answers.append([
+                question_id,
+                question_text,
+                answer
+            ])
+
+        data["ques_answer"] = updated_answers
+
+        return data
 
 
 # =========================

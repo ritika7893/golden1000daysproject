@@ -876,3 +876,159 @@ class Intervention2CreateAPIView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+class Intervention3CreateAPIView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+
+    def get_permissions(self):
+
+        if self.request.method == "POST":
+            return [IsAnganwadi()]
+
+        return [IsAuthenticated()]
+
+    def post(self, request):
+
+        serializer = Intervention3Serializer(data=request.data)
+
+        if serializer.is_valid():
+
+            candidate_id = serializer.validated_data.get("candidate_id")
+
+            # Check candidate exists
+            if not candidate_id:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "candidate_id is required"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            already_exists = Intervention3.objects.filter(
+                candidate_id=candidate_id
+            ).exists()
+
+            if already_exists:
+                return Response(
+                    {
+                        "success": False,
+                        "message": (
+                            "Intervention already exists for this candidate. "
+                            "One candidate can have only one intervention."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user_log = AllLog.objects.filter(
+                unique_id=request.user.unique_id
+            ).first()
+
+            if not user_log:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Authenticated user not found in AllLog"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            intervention = serializer.save(
+                created_by=user_log
+            )
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Intervention3 created successfully",
+                    "data": Intervention3Serializer(intervention).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+class Intervention4CreateAPIView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+
+    def get_permissions(self):
+
+        if self.request.method == "POST":
+            return [IsAnganwadi()]
+
+        return [IsAuthenticated()]
+
+    def post(self, request):
+
+        serializer = Intervention4Serializer(data=request.data)
+
+        if serializer.is_valid():
+
+            candidate_id = serializer.validated_data.get("candidate_id")
+
+            # Check candidate exists
+            if not candidate_id:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "candidate_id is required"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            already_exists = Intervention4.objects.filter(
+                candidate_id=candidate_id
+            ).exists()
+
+            if already_exists:
+                return Response(
+                    {
+                        "success": False,
+                        "message": (
+                            "Intervention already exists for this candidate. "
+                            "One candidate can have only one intervention."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user_log = AllLog.objects.filter(
+                unique_id=request.user.unique_id
+            ).first()
+
+            if not user_log:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Authenticated user not found in AllLog"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            intervention = serializer.save(
+                created_by=user_log
+            )
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Intervention4 created successfully",
+                    "data": Intervention4Serializer(intervention).data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {
+                "success": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
