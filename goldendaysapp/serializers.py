@@ -1,7 +1,40 @@
 from uuid import uuid4
 
 from rest_framework import serializers
-from .models import QuestionnaireIntervention,Candidate, Intervention1, Intervention2, Intervention3, Intervention4
+from .models import QuestionnaireIntervention,Candidate, Intervention1, Intervention2, Intervention3, Intervention4,AllLog
+from .models import (
+    District,
+    Almora,
+    Bageshwar,
+    Chamoli,
+    Champawat,
+    Dehradun,
+    Haridwar,
+    Nanital,
+    Pauri,
+    Pithoragarh,
+    Rudraprayag,
+    Tehri,
+    Usnagar,
+    Uttarkashi,SectorLogin
+)
+DISTRICT_MODEL_MAP = {
+    "almora": Almora,
+    "bageshwar": Bageshwar,
+    "chamoli": Chamoli,
+    "champawat": Champawat,
+    "dehradun": Dehradun,
+    "haridwar": Haridwar,
+    "nanital": Nanital,
+    "pauri": Pauri,
+    "pithoragarh": Pithoragarh,
+    "rudraprayag": Rudraprayag,
+    "tehri": Tehri,
+    "usnagar": Usnagar,
+    "uttarkashi": Uttarkashi,
+}
+
+
 class CandidateSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -218,10 +251,92 @@ class CandidateDetailSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    district = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+    awc_name = serializers.SerializerMethodField()
+    sector_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Candidate
         fields = "__all__"
-  
+
+    # =====================================
+    # Get AWC Details
+    # =====================================
+
+    def get_awc_data(self, obj):
+
+        try:
+
+            user = obj.registered_by
+
+            if not user:
+                return None
+
+            username = user.username
+
+        except AllLog.DoesNotExist:
+            return None
+
+        # Search all district tables
+        for district_name, model in DISTRICT_MODEL_MAP.items():
+
+            awc = model.objects.filter(
+                awc_code=username
+            ).first()
+
+            if awc:
+
+                # =====================================
+                # Get Supervisor Unique ID
+                # =====================================
+
+                supervisor = AllLog.objects.filter(
+                    username=awc.sector,
+                    role="supervisor"
+                ).first()
+
+                return {
+                    "district": district_name,
+                    "project": awc.project,
+                    "sector": awc.sector,
+                    "awc_name": awc.awc,
+                    "sector_id": supervisor.unique_id if supervisor else None
+                }
+
+        return None
+
+    def get_district(self, obj):
+
+        data = self.get_awc_data(obj)
+
+        return data["district"] if data else None
+
+    def get_project(self, obj):
+
+        data = self.get_awc_data(obj)
+
+        return data["project"] if data else None
+
+    def get_sector(self, obj):
+
+        data = self.get_awc_data(obj)
+
+        return data["sector"] if data else None
+
+    def get_awc_name(self, obj):
+
+        data = self.get_awc_data(obj)
+
+        return data["awc_name"] if data else None
+
+    def get_sector_id(self, obj):
+
+        data = self.get_awc_data(obj)
+
+        return data["sector_id"] if data else None
+      
   
 class QuestionnaireInterventionSerializer(serializers.ModelSerializer):
 

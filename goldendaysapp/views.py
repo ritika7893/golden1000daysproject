@@ -39,7 +39,7 @@ from .models import (
 
 from rest_framework.permissions import IsAuthenticated
 
-from goldendaysapp.permissions import IsAnganwadi,IsDirector
+from goldendaysapp.permissions import IsAnganwadi,IsDirector,IsSupervisor
 from goldendaysapp.serializers import Intervention4Serializer,Intervention3Serializer,Intervention2Serializer,QuestionnaireInterventionSerializer,Intervention1Serializer,CandidateDetailSerializer, CandidateSerializer
 
 
@@ -1311,3 +1311,123 @@ class DistrictListAPIView(APIView):
             "count": len(data),
             "data": data
         })
+        
+class CandidateBySectorAPIView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+
+    permission_classes = [
+        IsAuthenticated,
+        IsSupervisor
+    ]
+
+    def get(self, request):
+
+        sector_id = request.query_params.get("sector_id")
+
+        candidate_id = request.query_params.get("candidate_id")
+
+        # =====================================
+        # sector_id Required
+        # =====================================
+
+        if not sector_id:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "sector_id is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # =====================================
+        # Get Supervisor
+        # =====================================
+
+        supervisor = AllLog.objects.filter(
+            unique_id=sector_id,
+            role="supervisor"
+        ).first()
+
+        if not supervisor:
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Invalid sector_id"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        sector_name = supervisor.username
+
+        # =====================================
+        # Get All AWC Codes
+        # =====================================
+
+        awc_codes = []
+
+        for district_name, model in DISTRICT_MODEL_MAP.items():
+
+            awcs = model.objects.filter(
+                sector=sector_name
+            ).values_list(
+                "awc_code",
+                flat=True
+            )
+
+            awc_codes.extend(list(awcs))
+
+        # =====================================
+        # Get All AWC Users
+        # =====================================
+
+        awc_users = AllLog.objects.filter(
+            username__in=awc_codes,
+            role="anganwadi"
+        ).values_list(
+            "unique_id",
+            flat=True
+        )
+
+        # =====================================
+        # Filter Candidates
+        # =====================================
+
+        candidates = Candidate.objects.filter(
+            registered_by__in=awc_users
+        )
+
+        # Optional candidate filter
+        if candidate_id:
+
+            candidates = candidates.filter(
+                candidate_id=candidate_id
+            )
+
+        if not candidates.exists():
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "No candidates found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CandidateDetailSerializer(
+            candidates,
+            many=True
+        )
+
+        return Response(
+            {
+                "success": True,
+                "count": candidates.count(),
+                "sector_id": sector_id,
+                "sector": sector_name,
+                "data": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )

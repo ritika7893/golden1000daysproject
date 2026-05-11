@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import DistrictListAPIView,CdpoDropdownAPIView,SectorDropdownAPIView,AnganwadiDropdownAPIView,Intervention4CreateAPIView,Intervention3CreateAPIView,Intervention2CreateAPIView,QuestionnaireInterventionAPIView,CandidateDetailAPIView,LoginAPIView, RefreshTokenAPIView,ResetPasswordAPIView,UserListAPIView,CandidateAPIView,Intervention1CreateAPIView
+from .views import CandidateBySectorAPIView,DistrictListAPIView,CdpoDropdownAPIView,SectorDropdownAPIView,AnganwadiDropdownAPIView,Intervention4CreateAPIView,Intervention3CreateAPIView,Intervention2CreateAPIView,QuestionnaireInterventionAPIView,CandidateDetailAPIView,LoginAPIView, RefreshTokenAPIView,ResetPasswordAPIView,UserListAPIView,CandidateAPIView,Intervention1CreateAPIView
 urlpatterns = [
     path('login/',LoginAPIView.as_view(),name='login'),
     path('refresh-token/', RefreshTokenAPIView.as_view(), name='refresh_token'),
@@ -16,4 +16,5 @@ urlpatterns = [
     path('sector-dropdown/',SectorDropdownAPIView.as_view(),name='sector-dropdown'),
     path('cdpo-dropdown/',CdpoDropdownAPIView.as_view(),name='cdpo-project'),
     path('district-list/',DistrictListAPIView.as_view(),name='district-list'),
+    path("candidate-by-sector/",CandidateBySectorAPIView.as_view(),name="candidate-by-sector"),
 ]
