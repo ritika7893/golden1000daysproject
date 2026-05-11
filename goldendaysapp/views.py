@@ -20,6 +20,22 @@ from datetime import datetime
 from django.db.models import Avg
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from .models import (
+    District,
+    Almora,
+    Bageshwar,
+    Chamoli,
+    Champawat,
+    Dehradun,
+    Haridwar,
+    Nanital,
+    Pauri,
+    Pithoragarh,
+    Rudraprayag,
+    Tehri,
+    Usnagar,
+    Uttarkashi,SectorLogin
+)
 
 from rest_framework.permissions import IsAuthenticated
 
@@ -27,7 +43,7 @@ from goldendaysapp.permissions import IsAnganwadi,IsDirector
 from goldendaysapp.serializers import Intervention4Serializer,Intervention3Serializer,Intervention2Serializer,QuestionnaireInterventionSerializer,Intervention1Serializer,CandidateDetailSerializer, CandidateSerializer
 
 
-from .models import Intervention4,Intervention3,Intervention2,Intervention1,AllLog,Candidate,QuestionnaireIntervention
+from .models import CdpoLogin,Intervention4,Intervention3,Intervention2,Intervention1,AllLog,Candidate,QuestionnaireIntervention
 class LoginAPIView(APIView):
     def post(self, request):
 
@@ -261,46 +277,19 @@ class CandidateAPIView(APIView):
 
 
     def post(self, request):
-
+    
         serializer = CandidateSerializer(
             data=request.data
         )
-
+    
         if serializer.is_valid():
-
-            aadhar_number = serializer.validated_data.get(
-                "aadhar_number"
-            )
-
-            pregancy_num = serializer.validated_data.get(
-                "pregancy_num"
-            )
-
-            # Prevent duplicate registration
-            already_exists = Candidate.objects.filter(
-                aadhar_number=aadhar_number,
-                pregancy_num=pregancy_num
-            ).exists()
-
-            if already_exists:
-
-                return Response(
-                    {
-                        "success": False,
-                        "message": (
-                            "Candidate already registered "
-                            "with same Aadhaar and pregnancy number"
-                        )
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
+    
             user_log = AllLog.objects.filter(
                 unique_id=request.user.unique_id
             ).first()
-
+    
             if not user_log:
-
+    
                 return Response(
                     {
                         "success": False,
@@ -308,21 +297,20 @@ class CandidateAPIView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
+    
             candidate = serializer.save(
-                candidate_id=f"CAND-{uuid4().hex[:8].upper()}",
+             
                 registered_by=user_log
             )
-
+    
             return Response(
                 {
                     "success": True,
-                    "message": "Candidate created successfully",
-                    "data": CandidateSerializer(candidate).data
+                    "message": "Candidate created successfully"
                 },
                 status=status.HTTP_201_CREATED
             )
-
+    
         return Response(
             {
                 "success": False,
@@ -330,7 +318,6 @@ class CandidateAPIView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
-
 
     def put(self, request):
 
@@ -370,35 +357,7 @@ class CandidateAPIView(APIView):
 
         if serializer.is_valid():
 
-            aadhar_number = serializer.validated_data.get(
-                "aadhar_number",
-                candidate.aadhar_number
-            )
-
-            pregancy_num = serializer.validated_data.get(
-                "pregancy_num",
-                candidate.pregancy_num
-            )
-
-            duplicate_exists = Candidate.objects.filter(
-                aadhar_number=aadhar_number,
-                pregancy_num=pregancy_num
-            ).exclude(
-                id=candidate.id
-            ).exists()
-
-            if duplicate_exists:
-
-                return Response(
-                    {
-                        "success": False,
-                        "message": (
-                            "Another candidate already exists "
-                            "with same Aadhaar and pregnancy number"
-                        )
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+           
 
             updated_candidate = serializer.save()
 
@@ -1032,3 +991,323 @@ class Intervention4CreateAPIView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+        
+# views.py
+
+
+
+# =========================
+# Dynamic Model Mapping
+# =========================
+
+DISTRICT_MODEL_MAP = {
+    "almora": Almora,
+    "bageshwar": Bageshwar,
+    "chamoli": Chamoli,
+    "champawat": Champawat,
+    "dehradun": Dehradun,
+    "haridwar": Haridwar,
+    "nanital": Nanital,
+    "pauri": Pauri,
+    "pithoragarh": Pithoragarh,
+    "rudraprayag": Rudraprayag,
+    "tehri": Tehri,
+    "usnagar": Usnagar,
+    "uttarkashi": Uttarkashi,
+}
+
+
+class AnganwadiDropdownAPIView(APIView):
+
+    def get(self, request):
+
+        district_name = request.GET.get("district")
+        project = request.GET.get("project")
+        sector = request.GET.get("sector")
+
+        # =========================
+        # 1. District List
+        # =========================
+
+        if not district_name:
+
+            districts = District.objects.all().values(
+                "district",
+                "sdname"
+            )
+
+            data = [
+                {
+                  
+                    "district": item["sdname"]
+                }
+                for item in districts
+            ]
+
+            return Response({
+                "success": True,
+                "type": "district",
+                "data": data
+            })
+
+        # =========================
+        # Get Dynamic Model
+        # =========================
+
+        model = DISTRICT_MODEL_MAP.get(district_name.lower())
+
+        if not model:
+            return Response({
+                "success": False,
+                "message": "Invalid district"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # =========================
+        # 2. Project List
+        # =========================
+
+        if district_name and not project:
+
+            projects = (
+                model.objects
+                .values("project")
+                .distinct()
+                .order_by("project")
+            )
+
+            data = [
+                {
+                    "project": item["project"]
+                }
+                for item in projects
+            ]
+
+            return Response({
+                "success": True,
+                "type": "project",
+                "district": district_name,
+                "data": data
+            })
+
+        # =========================
+        # 3. Sector List
+        # =========================
+
+        if district_name and project and not sector:
+
+            sectors = (
+                model.objects
+                .filter(project=project)
+                .values("sector")
+                .distinct()
+                .order_by("sector")
+            )
+
+            data = [
+                {
+                    "sector": item["sector"]
+                }
+                for item in sectors
+            ]
+
+            return Response({
+                "success": True,
+                "type": "sector",
+                "district": district_name,
+                "project": project,
+                "data": data
+            })
+
+        # =========================
+        # 4. Anganwadi List
+        # =========================
+
+        awcs = (
+            model.objects
+            .filter(
+                project=project,
+                sector=sector
+            )
+            .values(
+                "id",
+                "awc",
+                "awc_code",
+                "awc_hindi"
+            )
+            .order_by("awc")
+        )
+
+        data = [
+            {
+                "id": item["id"],
+                "awc_name": item["awc"],
+                "awc_code": item["awc_code"],
+                "awc_hindi": item["awc_hindi"],
+                "display_name": f'{item["awc"]} ({item["awc_code"]})'
+            }
+            for item in awcs
+        ]
+
+        return Response({
+            "success": True,
+            "type": "anganwadi",
+            "district": district_name,
+            "project": project,
+            "sector": sector,
+            "data": data
+        })
+        
+        
+class SectorDropdownAPIView(APIView):
+
+    def get(self, request):
+
+        district = request.GET.get("district")
+
+        # =========================
+        # 1. District List
+        # =========================
+
+        if not district:
+
+            districts = (
+                SectorLogin.objects
+                .values("district")
+                .distinct()
+                .order_by("district")
+            )
+
+            data = [
+                {
+                    "district": item["district"]
+                }
+                for item in districts
+            ]
+
+            return Response({
+                "success": True,
+                "type": "district",
+                "data": data
+            })
+
+        # =========================
+        # 2. Project + Sector List
+        # =========================
+    
+        records = (
+            SectorLogin.objects
+            .filter(district=district)
+            .values(
+                "project_code",
+                "sector"
+            )
+            .order_by("project_code", "sector")
+        )
+        
+        grouped_data = {}
+        
+        for item in records:
+        
+            project_code = item["project_code"]
+        
+            if project_code not in grouped_data:
+        
+                grouped_data[project_code] = {
+                    "project_code": item["project_code"],
+                    "sectors": []
+                }
+        
+            grouped_data[project_code]["sectors"].append({
+                "sector": item["sector"]
+            })
+        
+        return Response({
+            "success": True,
+            "type": "project_sector",
+            "district": district,
+            "data": list(grouped_data.values())
+        })
+class CdpoDropdownAPIView(APIView):
+
+    def get(self, request):
+
+        district = request.GET.get("district")
+
+        # =========================
+        # 1. District List
+        # =========================
+
+        if not district:
+
+            districts = (
+                CdpoLogin.objects
+                .values("district")
+                .distinct()
+                .order_by("district")
+            )
+
+            data = [
+                {
+                    "district": item["district"]
+                }
+                for item in districts
+            ]
+
+            return Response({
+                "success": True,
+                "type": "district",
+                "data": data
+            })
+
+        # =========================
+        # 2. Project List
+        # =========================
+
+        projects = (
+            CdpoLogin.objects
+            .filter(district=district)
+            .values("project_name")
+            .distinct()
+            .order_by("project_name")
+        )
+
+        data = [
+            {
+                "project_name": item["project_name"]
+            }
+            for item in projects
+        ]
+
+        return Response({
+            "success": True,
+            "type": "project",
+            "district": district,
+            "data": data
+        })
+class DistrictListAPIView(APIView):
+
+    def get(self, request):
+
+        districts = (
+            District.objects
+            .values(
+                "sdname",
+                "district"
+            )
+            .distinct()
+            .order_by("sdname")
+        )
+
+        data = [
+            {
+                "sdname": item["sdname"],
+                "district": item["district"]
+            }
+            for item in districts
+        ]
+
+        return Response({
+            "success": True,
+            "count": len(data),
+            "data": data
+        })

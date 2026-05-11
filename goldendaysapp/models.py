@@ -50,15 +50,16 @@ class Candidate(models.Model):
     phone= models.CharField(max_length=15)
     dob = models.DateField(blank=True, null=True)
     registered_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.CASCADE,blank=True, null=True, related_name='registered_candidates')
-    aadhar_number = models.CharField(max_length=20, unique=True)
+    aadhar_number = models.CharField(max_length=20)
     aadhar_file = models.FileField(upload_to='aadhar_files/', blank=True, null=True)
-    pregancy_num= models.IntegerField()
+   
     child_name = models.CharField(max_length=200, blank=True, null=True)
     lmp_date = models.DateField(blank=True, null=True)
-    pan_no = models.CharField(max_length=20, unique=True)
+    pan_no = models.CharField(max_length=20)
     pan_file = models.FileField(upload_to='pan_files/', blank=True, null=True)
-    account_number = models.CharField(max_length=30, unique=True)
+    account_number = models.CharField(max_length=30)
     ifsc_code = models.CharField(max_length=20)
+    bank_name = models.CharField(max_length=20,blank=True, null=True)
     verified_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.SET_NULL, related_name='verified_candidates', blank=True, null=True)
     verified_at = models.DateTimeField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
@@ -67,13 +68,41 @@ class Candidate(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    def generate_candidate_id(self):
+
+        current_year = datetime.now().year
+
+        username = (
+            self.registered_by.username.upper()
+            if self.registered_by and self.registered_by.username
+            else "USER"
+        )
+
+        prefix = f"CAN/{current_year}/{username}/"
+
+        last_candidate = Candidate.objects.filter(
+            candidate_id__startswith=prefix
+        ).order_by('-candidate_id').first()
+
+        if last_candidate:
+
+            last_number = int(
+                last_candidate.candidate_id.split("/")[-1]
+            )
+
+            next_number = last_number + 1
+
+        else:
+
+            next_number = 1
+
+        return f"{prefix}{str(next_number).zfill(5)}"
+
     def save(self, *args, **kwargs):
 
         if not self.candidate_id:
 
-            self.candidate_id = (
-                f"CAND-{uuid4().hex[:8].upper()}"
-            )
+            self.candidate_id = self.generate_candidate_id()
 
         super().save(*args, **kwargs)
         
@@ -277,15 +306,29 @@ class CdpoLogin(models.Model):
 # =========================
 
 class SectorLogin(models.Model):
-    sdname = models.CharField(max_length=200)
-    district = models.CharField(max_length=200)
-    project_code = models.CharField(max_length=200)
-    project_name = models.CharField(max_length=200)
-    sector = models.CharField(max_length=200)
-    password = models.CharField(max_length=100)
+
+    sdname = models.CharField(max_length=200, blank=True, null=True)
+
+    district = models.CharField(max_length=200, blank=True, null=True)
+
+    project_code = models.CharField(max_length=200, blank=True, null=True)
+
+    project_name = models.CharField(max_length=200, blank=True, null=True)
+
+    sector = models.CharField(max_length=200, blank=True, null=True)
+
+    sector_incharge = models.CharField(max_length=200, blank=True, null=True)
+
+    incharge_mob = models.CharField(max_length=200, blank=True, null=True)
+
+    password = models.CharField(max_length=100, blank=True, null=True)
+
+    def_pass = models.CharField(max_length=20, blank=True, null=True)
+
+    updated_on = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
         db_table = "sector_login"
 
     def __str__(self):
-        return self.sector
+        return f"{self.sector} - {self.project_name}"
