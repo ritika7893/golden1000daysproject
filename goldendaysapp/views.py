@@ -24,15 +24,15 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
 from goldendaysapp.permissions import IsAnganwadi,IsDirector
-from goldendaysapp.serializers import Intervention2Serializer,QuestionnaireInterventionSerializer,Intervention1Serializer,CandidateDetailSerializer, CandidateSerializer
+from goldendaysapp.serializers import Intervention4Serializer,Intervention3Serializer,Intervention2Serializer,QuestionnaireInterventionSerializer,Intervention1Serializer,CandidateDetailSerializer, CandidateSerializer
 
 
-from .models import Intervention2,Intervention1,AllLog,Candidate,QuestionnaireIntervention
+from .models import Intervention4,Intervention3,Intervention2,Intervention1,AllLog,Candidate,QuestionnaireIntervention
 class LoginAPIView(APIView):
     def post(self, request):
 
         email_or_phone = request.data.get("email_or_phone")
-        username = request.data.get("username")   # ðŸ‘ˆ changed
+        username = request.data.get("username")   # Ã°Å¸â€˜Ë† changed
         password = request.data.get("password")
         role = request.data.get("role")
 
@@ -92,7 +92,7 @@ class LoginAPIView(APIView):
             # ----------------------------
             # CHECK PASSWORD
             # ----------------------------
-            if not check_password(password, user.password):
+            if password != user.password:
                 return Response(
                     {"error": "Invalid credentials"},
                     status=status.HTTP_401_UNAUTHORIZED
@@ -151,7 +151,7 @@ class RefreshTokenAPIView(APIView):
 class ResetPasswordAPIView(APIView):
     def post(self, request):
 
-        username = request.data.get("username")   # 👈 changed
+        username = request.data.get("username")   # ðŸ‘ˆ changed
         role = request.data.get("role")
         new_password = request.data.get("new_password")
 
@@ -162,16 +162,16 @@ class ResetPasswordAPIView(APIView):
             )
 
         try:
-            user = AllLog.objects.get(username=username, role=role)  # 👈 changed
+            user = AllLog.objects.get(username=username, role=role)  # ðŸ‘ˆ changed
 
-            # ✅ optional safety check
+            # âœ… optional safety check
             if not user.is_active:
                 return Response(
                     {"error": "Account is disabled"},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            # ✅ update password
+            # âœ… update password
             user.password = make_password(new_password)
             user.save()
 

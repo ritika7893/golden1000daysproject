@@ -23,7 +23,7 @@ class AllLog(models.Model):
     unique_id = models.CharField(unique=True, max_length=50, editable=False)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=15,blank=True, null=True)
-    username = models.CharField(max_length=120, unique=True, null=True, blank=True)
+    username = models.CharField(max_length=120,null=True, blank=True)
     password = models.CharField(max_length=255,default='')
     role = models.CharField(max_length=50)
     is_verified = models.BooleanField(default=False)
@@ -31,7 +31,7 @@ class AllLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'unique_id'
     REQUIRED_FIELDS = []
     def __str__(self):
         return f"{self.email} ({self.role})"
@@ -48,7 +48,7 @@ class Candidate(models.Model):
     candidate_id = models.CharField(max_length=50, unique=True, editable=False)
     candidate_name = models.CharField(max_length=200)
     phone= models.CharField(max_length=15)
-    dob = models.DateField()
+    dob = models.DateField(blank=True, null=True)
     registered_by = models.ForeignKey(AllLog,to_field='unique_id', on_delete=models.CASCADE,blank=True, null=True, related_name='registered_candidates')
     aadhar_number = models.CharField(max_length=20, unique=True)
     aadhar_file = models.FileField(upload_to='aadhar_files/', blank=True, null=True)
@@ -126,11 +126,166 @@ class Intervention4(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
-
+        
 class QuestionnaireIntervention(models.Model):
     intervention = models.CharField(max_length=100)
     question_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    
+
+from django.db import models
+
+
+# =========================
+# Common Abstract Model
+# =========================
+
+class AWCBaseModel(models.Model):
+    district_code = models.CharField(max_length=120)
+    project = models.CharField(max_length=100)
+    sector = models.CharField(max_length=100)
+    awc_code = models.CharField(max_length=100)
+    awc = models.CharField(max_length=200)
+    awc_hindi = models.CharField(max_length=500, blank=True, null=True)
+    awc_type = models.CharField(max_length=100)
+    code1 = models.CharField(max_length=100)
+    code2 = models.CharField(max_length=100)
+    edit_time = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+# =========================
+# District Tables
+# =========================
+
+class Almora(AWCBaseModel):
+    class Meta:
+        db_table = "almora"
+
+
+class Bageshwar(AWCBaseModel):
+    class Meta:
+        db_table = "bageshwar"
+
+
+class Chamoli(AWCBaseModel):
+    class Meta:
+        db_table = "chamoli"
+
+
+class Champawat(AWCBaseModel):
+    class Meta:
+        db_table = "champawat"
+
+
+class Dehradun(AWCBaseModel):
+    class Meta:
+        db_table = "dehradun"
+
+
+class Haridwar(AWCBaseModel):
+    class Meta:
+        db_table = "haridwar"
+
+
+class Nanital(AWCBaseModel):
+    class Meta:
+        db_table = "nanital"
+
+
+class Pauri(AWCBaseModel):
+    class Meta:
+        db_table = "pauri"
+
+
+class Pithoragarh(AWCBaseModel):
+    class Meta:
+        db_table = "pithoragarh"
+
+
+class Rudraprayag(AWCBaseModel):
+    class Meta:
+        db_table = "rudraprayag"
+
+
+class Tehri(AWCBaseModel):
+    class Meta:
+        db_table = "tehri"
+
+
+class Usnagar(AWCBaseModel):
+    class Meta:
+        db_table = "usnagar"
+
+
+class Uttarkashi(AWCBaseModel):
+    class Meta:
+        db_table = "uttarkashi"
+
+
+# =========================
+# District Login Table
+# =========================
+
+class District(models.Model):
+    district = models.CharField(max_length=500)
+    bill_use = models.CharField(max_length=200)
+    sdname = models.CharField(max_length=500)
+    db_use = models.CharField(max_length=200)
+    code = models.CharField(max_length=20)
+    password = models.CharField(max_length=100)
+    def_pass = models.CharField(max_length=200, default="8266")
+    stat_fin = models.CharField(max_length=200)
+
+    class Meta:
+        db_table = "district"
+
+    def __str__(self):
+        return self.district
+
+
+# =========================
+# CDPO Login Table
+# =========================
+
+class CdpoLogin(models.Model):
+    district = models.CharField(max_length=100)
+    bill_use = models.CharField(max_length=200)
+    project_code = models.CharField(max_length=100)
+    project_name = models.CharField(max_length=100)
+    project_show = models.CharField(max_length=200)
+    password = models.CharField(max_length=100)
+    stat_fin = models.CharField(max_length=200)
+    ang_pur = models.CharField(max_length=20)
+    adhar_stat = models.CharField(
+        max_length=200,
+        default="unverified"
+    )
+
+    class Meta:
+        db_table = "cdpo_login"
+
+    def __str__(self):
+        return self.project_name
+
+
+# =========================
+# Sector Login Table
+# =========================
+
+class SectorLogin(models.Model):
+    sdname = models.CharField(max_length=200)
+    district = models.CharField(max_length=200)
+    project_code = models.CharField(max_length=200)
+    project_name = models.CharField(max_length=200)
+    sector = models.CharField(max_length=200)
+    password = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "sector_login"
+
+    def __str__(self):
+        return self.sector

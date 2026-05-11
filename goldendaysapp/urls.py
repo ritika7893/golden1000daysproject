@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CandidateDetailAPIView, Intervention1CreateAPIView, Intervention2CreateAPIView, Intervention4CreateAPIView, LoginAPIView, QuestionnaireInterventionAPIView, RefreshTokenAPIView,ResetPasswordAPIView,UserListAPIView,CandidateAPIView
+from .views import Intervention4CreateAPIView,Intervention3CreateAPIView,Intervention2CreateAPIView,QuestionnaireInterventionAPIView,CandidateDetailAPIView,LoginAPIView, RefreshTokenAPIView,ResetPasswordAPIView,UserListAPIView,CandidateAPIView,Intervention1CreateAPIView
 urlpatterns = [
     path('login/',LoginAPIView.as_view(),name='login'),
     path('refresh-token/', RefreshTokenAPIView.as_view(), name='refresh_token'),
